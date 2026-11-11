@@ -192,11 +192,11 @@ Run   | Seed         | Exit Code | Kills   | Hit Running Job | Duration
 ### Full 10,000-Job Stress Test ([`results/chaos-10k-run1.txt`](results/chaos-10k-run1.txt))
 Ran 10,000 jobs with 8 workers, 35 SIGKILLs, 500 concurrent cancellations, and 30% duplicate request replays:
 - **Duration**: 213.82s (~3.5 minutes), throughput 46.77 jobs/s.
-- **Kills**: 35 kills, 100% (35/35) landed on workers actively processing a job.
-- **Cancellations**: 495 returned 200, 232 targeted active claims, 228 stale writes rejected.
+- **Kills**: 35 kills, 100% (35/35) landed on workers actively processing a job. Actual cadence was 1 kill every ~6.1 seconds (a jittered ~2s delay + 3s restart pause + docker execution time).
+- **Cancellations**: 495 returned 200, 5 returned 409 (job had already finished), 232 targeted active claims, 228 stale writes rejected by the fence.
 - **Invariants**: 8 of 9 passed. 
-  - **Empirical Dual-Write Proof**: Job ID `14412` was committed to `effects` in PostgreSQL, but its worker was SIGKILLed before `fs.appendFile` completed, leaving it missing from `jobs.log` (`[KNOWN-FLAW] count=1`).
-  - **Drain Settle Boundary**: Invariant 5 showed 10 jobs remaining in `queued` status because the default 180s settle timeout elapsed while workers were recovering from the 35 kills. Extending `SETTLE_TIMEOUT_SEC=300` drains the queue completely.
+  - **Settle Race vs Dual-Write**: Job ID `14412` was flagged as `[KNOWN-FLAW] count=1` (in `effects` but missing from `jobs.log`). Inspecting `data/jobs.log` revealed it was appended at `13:36:28.298Z`, exactly 42ms after Phase d read the file (`13:36:28.256Z`). The worker was still completing the write when the 180s settle timer expired.
+  - **Drain Settle Boundary**: Invariant 5 showed 10 jobs remaining in `queued` status because the default 180s settle timeout elapsed while workers were recovering from the 35 kills. Extending `SETTLE_TIMEOUT_SEC=300` allows the queue to drain completely to 0.
 
 ### Mutation Testing Results
 To verify that the harness actually detects bugs rather than rubber-stamping passes:
@@ -245,18 +245,23 @@ When the mutant workers executed jobs 1 through 500, they appended a second line
 Crucially, this highlighted an essential architectural insight:
 **The `UNIQUE (job_id)` constraint on `effects` is the database backstop.** Even when the application-level fencing token was removed in `nofence`, the database unique constraint prevented duplicate rows in `effects`. However, external systems without database constraints (like log files or webhook calls) remain vulnerable to duplicate execution if the fence is missing.
 
+### 3. What Really Happened with Job ID 14412 in the 10,000-Job Run?
+In `results/chaos-10k-run1.txt`, Job `14412` was flagged under `[KNOWN-FLAW]` (in `effects` but missing from `jobs.log`). 
+
+Checking `data/jobs.log` showed:
+`jobId=14412 worker=d14960deb521-1 word=river ts=2026-11-11T13:36:28.298Z`
+
+Phase d executed its file read at `13:36:28.256Z`. The worker committed to PostgreSQL milliseconds before Phase d, and appended to `jobs.log` 42 milliseconds *after* Phase d read the file. This was not a mid-write crash, but a race condition during queue drain caused by the 180-second settle timer expiring while the final batch of jobs was still finishing.
+
 ---
 
 ## 5. Verdict: SHIP or DON'T SHIP at 100 req/s?
 
 ### Verdict: **DON'T SHIP**
 
-While the core database state machine is correct and survived continuous `SIGKILL` attacks and worker freezes, two critical architectural issues prevent shipping to production at 100 requests per second:
-
-1. **The Post-Commit Dual-Write Gap**: If a job's execution involves an external side-effect (calling a third-party API, sending an email, or writing an S3 file), executing that side-effect after the database `COMMIT` creates an at-most-once vulnerability where a crash causes a missing side-effect. Executing it before `COMMIT` creates an at-least-once vulnerability where a crash causes a duplicate side-effect.
-   * *Fix first*: Implement the **Transactional Outbox Pattern** with an outbox table in PostgreSQL and idempotent downstream consumers.
-2. **Database Connection Saturation & Polling Overhead**: Under 100 req/s with 8+ workers, 8 workers polling the queue every 200ms with `FOR UPDATE SKIP LOCKED` creates high empty-polling query load and connection churn on PostgreSQL.
-   * *Fix first*: Introduce **PgBouncer** for connection pooling, and replace fixed interval polling with PostgreSQL **`LISTEN / NOTIFY`** to wake idle workers reactively.
+I did not load-test at 100 req/s. Based on the architecture and failure boundaries observed, I would not ship until:
+1. The post-commit file write gap is closed (or external side effects are managed via a Transactional Outbox pattern).
+2. A proper benchmark at 100 req/s is run with connection pooling (e.g., PgBouncer) and reactive dispatch (`LISTEN/NOTIFY`) to verify that PostgreSQL does not suffer connection starvation or high polling CPU churn.
 
 ---
 
@@ -269,9 +274,13 @@ While the core database state machine is correct and survived continuous `SIGKIL
 
 ## 7. AI Usage Note
 
-* **Where AI was used**: Initial brainstorming of the chaos harness architecture, drafting edge-case test combinations, and structuring bash orchestration scripts.
-* **What was accepted**: The Common Table Expression structure for atomic claims (`FOR UPDATE SKIP LOCKED` with `RETURNING`).
-* **What was verified & corrected**:
-  * Corrected container port collisions between local PostgreSQL (5432) and Docker Compose by mapping host port 5433.
-  * Discovered and resolved dirty volume persistence in `quickstart.sh` where leftover database records mismatched wiped log files.
-  * Caught and fixed `cp -R` directory copying in `mutation-test.sh` that carried over host log files into isolated mutation sandboxes.
+* **Where AI was used**:
+  - Initially brainstormed required components and PostgreSQL concurrency features (`FOR UPDATE SKIP LOCKED`, CTEs).
+  - Used Claude to structure the architectural progression into 5 iterative versions (v0 naive to v5 chaos), identifying exact failure modes to induce at each step.
+  - Used Antigravity (Gemini) to scaffold the implementation code, Docker Compose orchestration, and testing scripts.
+* **What was verified & corrected independently**:
+  - Examined raw logs and database queries for every run, rejecting agent assumptions that overstated results (e.g., catching that the actual kill interval was ~6s rather than 2s due to restart sleep).
+  - Investigated Job 14412 to uncover the 42ms race between queue drain and file reading rather than blindly accepting it as a crash during file append.
+  - Resolved container port collisions (mapping host port 5433 to avoid local Postgres).
+  - Discovered dirty volume persistence in `quickstart.sh` where leftover database records mismatched wiped log files.
+  - Caught and fixed `cp -R` directory copying in `mutation-test.sh` that carried over host log files into isolated mutation sandboxes.
