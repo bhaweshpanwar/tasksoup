@@ -45,6 +45,7 @@ services:
       LEASE_SECONDS: ${LEASE_SECONDS:-5}
       WORK_MIN_MS: ${WORK_MIN_MS:-50}
       WORK_MAX_MS: ${WORK_MAX_MS:-300}
+      MAX_ATTEMPTS: ${MAX_ATTEMPTS:-3}
     volumes:
       - ./data:/data
     depends_on:

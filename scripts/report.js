@@ -8,7 +8,7 @@ const expectedCount = process.env.EXPECTED_JOBS
     ? parseInt(process.argv[2], 10)
     : (process.env.EXPECTED_COUNT ? parseInt(process.env.EXPECTED_COUNT, 10) : 1000));
 
-const reportLabel = process.env.REPORT_LABEL || 'v3';
+const reportLabel = process.env.REPORT_LABEL || 'v4';
 const jobFilePath = process.env.JOB_FILE || path.join(__dirname, '../data/jobs.log');
 
 async function run() {
@@ -38,7 +38,7 @@ async function run() {
   const statusRes = await pool.query(
     'SELECT status, COUNT(*) AS count FROM jobs GROUP BY status'
   );
-  const statusCounts = { queued: 0, running: 0, succeeded: 0 };
+  const statusCounts = { queued: 0, running: 0, succeeded: 0, failed: 0, cancelled: 0 };
   for (const row of statusRes.rows) {
     statusCounts[row.status] = parseInt(row.count, 10);
   }
@@ -47,16 +47,16 @@ async function run() {
     totalJobs > 0 &&
     statusCounts.queued === 0 &&
     statusCounts.running === 0 &&
-    statusCounts.succeeded === totalJobs;
+    statusCounts.succeeded + statusCounts.failed + statusCounts.cancelled === totalJobs;
 
   if (statusPass) {
     console.log(
-      `[PASS] Jobs by status (counts: succeeded=${statusCounts.succeeded}, queued=${statusCounts.queued}, running=${statusCounts.running})`
+      `[PASS] Jobs by status (counts: succeeded=${statusCounts.succeeded}, failed=${statusCounts.failed}, cancelled=${statusCounts.cancelled}, queued=${statusCounts.queued}, running=${statusCounts.running})`
     );
   } else {
     hasFailure = true;
     console.log(
-      `[FAIL] Jobs by status (counts: succeeded=${statusCounts.succeeded}, queued=${statusCounts.queued}, running=${statusCounts.running})`
+      `[FAIL] Jobs by status (counts: succeeded=${statusCounts.succeeded}, failed=${statusCounts.failed}, cancelled=${statusCounts.cancelled}, queued=${statusCounts.queued}, running=${statusCounts.running})`
     );
   }
 
@@ -226,6 +226,87 @@ async function run() {
       console.log(
         `  jobId=${row.id} attempts=${row.attempts} claim_count=${row.claim_count}`
       );
+    }
+  }
+
+  const dupKeysRes = await pool.query(
+    'SELECT idempotency_key, COUNT(*) AS count FROM jobs GROUP BY idempotency_key HAVING COUNT(*) > 1 LIMIT 10'
+  );
+  if (dupKeysRes.rows.length === 0) {
+    console.log('[PASS] Duplicate idempotency_key in jobs: none');
+  } else {
+    hasFailure = true;
+    console.log(
+      `[FAIL] Duplicate idempotency_key in jobs (${dupKeysRes.rows.length} offenders shown):`
+    );
+    for (const row of dupKeysRes.rows) {
+      console.log(`  key=${row.idempotency_key} count=${row.count}`);
+    }
+  }
+
+  const cancelledWithEffectsRes = await pool.query(
+    "SELECT j.id FROM jobs j JOIN effects e ON j.id = e.job_id WHERE j.status = 'cancelled' LIMIT 10"
+  );
+  if (cancelledWithEffectsRes.rows.length === 0) {
+    console.log('[PASS] Cancelled jobs with effects rows: none');
+  } else {
+    hasFailure = true;
+    console.log(
+      `[FAIL] Cancelled jobs with effects rows (${cancelledWithEffectsRes.rows.length} offenders shown):`
+    );
+    for (const row of cancelledWithEffectsRes.rows) {
+      console.log(`  jobId=${row.id}`);
+    }
+  }
+
+  const cancelledJobsRes = await pool.query(
+    "SELECT id FROM jobs WHERE status = 'cancelled'"
+  );
+  const cancelledWithLogs = [];
+  for (const row of cancelledJobsRes.rows) {
+    const idStr = String(row.id);
+    if (logCounts.has(idStr)) {
+      cancelledWithLogs.push({ id: row.id, count: logCounts.get(idStr) });
+    }
+  }
+  if (cancelledWithLogs.length === 0) {
+    console.log('[PASS] Cancelled jobs with jobs.log lines: none');
+  } else {
+    hasFailure = true;
+    console.log(
+      `[FAIL] Cancelled jobs with jobs.log lines (${cancelledWithLogs.length} offenders shown):`
+    );
+    for (const item of cancelledWithLogs.slice(0, 10)) {
+      console.log(`  jobId=${item.id} count=${item.count}`);
+    }
+  }
+
+  const failedJobsRes = await pool.query(
+    "SELECT id, failed_reason FROM jobs WHERE status = 'failed' ORDER BY id ASC"
+  );
+  const failedCount = failedJobsRes.rows.length;
+  if (failedCount === 0) {
+    console.log('[INFO] Jobs in failed state: 0');
+  } else {
+    const examples = failedJobsRes.rows
+      .slice(0, 10)
+      .map((r) => `${r.id} (${r.failed_reason})`)
+      .join(', ');
+    console.log(`[INFO] Jobs in failed state: ${failedCount} (examples: ${examples})`);
+  }
+
+  const succeededAndCancelledRes = await pool.query(
+    "SELECT id FROM jobs WHERE status = 'succeeded' AND cancelled_at IS NOT NULL LIMIT 10"
+  );
+  if (succeededAndCancelledRes.rows.length === 0) {
+    console.log('[PASS] Succeeded jobs with cancelled_at set: none');
+  } else {
+    hasFailure = true;
+    console.log(
+      `[FAIL] Succeeded jobs with cancelled_at set (${succeededAndCancelledRes.rows.length} offenders shown):`
+    );
+    for (const row of succeededAndCancelledRes.rows) {
+      console.log(`  jobId=${row.id}`);
     }
   }
 

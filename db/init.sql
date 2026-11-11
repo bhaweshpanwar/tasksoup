@@ -1,11 +1,15 @@
 CREATE TABLE IF NOT EXISTS jobs (
   id BIGSERIAL PRIMARY KEY,
-  idempotency_key TEXT,
-  status TEXT NOT NULL DEFAULT 'queued',
+  idempotency_key TEXT NOT NULL UNIQUE,
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  request_hash TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'running', 'succeeded', 'failed', 'cancelled')),
   worker_id TEXT,
   lease_expires_at TIMESTAMPTZ,
   attempts INT NOT NULL DEFAULT 0,
   lease_token BIGINT NOT NULL DEFAULT 0,
+  cancelled_at TIMESTAMPTZ,
+  failed_reason TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

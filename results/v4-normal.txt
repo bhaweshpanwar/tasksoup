@@ -1,0 +1,22 @@
+REPORT_LABEL: v4-normal
+TIMESTAMP: 2026-11-11T10:26:06.522Z
+EXPECTED_JOBS: 300
+---
+[PASS] Total jobs in table matches expected count: 300/300
+[PASS] Jobs by status (counts: succeeded=300, failed=0, cancelled=0, queued=0, running=0)
+[PASS] Jobs with more than one row in effects: none
+[PASS] Jobs with more than one line in jobs.log: none
+[PASS] Jobs stuck in running: 0
+[PASS] Jobs succeeded with zero effects: 0
+[PASS] Effects rows (300) match jobs.log line count (300)
+[PASS] Jobs with more than one claim_log row for same lease_token: none
+[PASS] Jobs with attempts > 1: 0
+[PASS] Jobs with status 'running' and lease_expires_at in the past: 0
+[PASS] Succeeded jobs with effects lease_token mismatch: 0
+[PASS] Jobs where claim_log count differs from attempts: 0
+[PASS] Duplicate idempotency_key in jobs: none
+[PASS] Cancelled jobs with effects rows: none
+[PASS] Cancelled jobs with jobs.log lines: none
+[INFO] Jobs in failed state: 0
+[PASS] Succeeded jobs with cancelled_at set: none
+Reminder: docker compose logs worker | grep "stale write rejected"

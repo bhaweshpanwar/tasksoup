@@ -8,6 +8,7 @@ const jobFile = process.env.JOB_FILE || '/data/jobs.log';
 const leaseSeconds = parseInt(process.env.LEASE_SECONDS || '5', 10);
 const workMinMs = parseInt(process.env.WORK_MIN_MS || '50', 10);
 const workMaxMs = parseInt(process.env.WORK_MAX_MS || '300', 10);
+const maxAttempts = parseInt(process.env.MAX_ATTEMPTS || '3', 10);
 
 const words = [
   'cloud', 'stream', 'ocean', 'forest', 'mountain',
@@ -24,11 +25,21 @@ process.on('SIGTERM', () => {
 
 setInterval(async () => {
   try {
-    const res = await pool.query(
-      "UPDATE jobs SET status = 'queued', worker_id = NULL, lease_expires_at = NULL WHERE status = 'running' AND lease_expires_at < clock_timestamp() RETURNING id"
+    const failedRes = await pool.query(
+      "UPDATE jobs SET status = 'failed', failed_reason = 'max_attempts', lease_expires_at = NULL WHERE status = 'running' AND lease_expires_at < clock_timestamp() AND attempts >= $1 RETURNING id",
+      [maxAttempts]
     );
-    if (res.rows.length > 0) {
-      const ids = res.rows.map((r) => r.id).join(', ');
+    if (failedRes.rows.length > 0) {
+      const ids = failedRes.rows.map((r) => r.id).join(', ');
+      console.log(`Failed expired jobs: ${ids}`);
+    }
+
+    const requeueRes = await pool.query(
+      "UPDATE jobs SET status = 'queued', worker_id = NULL, lease_expires_at = NULL WHERE status = 'running' AND lease_expires_at < clock_timestamp() AND attempts < $1 RETURNING id",
+      [maxAttempts]
+    );
+    if (requeueRes.rows.length > 0) {
+      const ids = requeueRes.rows.map((r) => r.id).join(', ');
       console.log(`Requeued expired jobs: ${ids}`);
     }
   } catch (err) {
