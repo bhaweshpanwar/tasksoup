@@ -1,0 +1,2 @@
+worker-1  | stale write rejected for job 74
+worker-3  | stale write rejected for job 147

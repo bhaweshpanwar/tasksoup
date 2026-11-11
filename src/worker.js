@@ -54,14 +54,15 @@ async function run() {
           SET status = 'running',
               worker_id = $1,
               lease_expires_at = clock_timestamp() + make_interval(secs => $2),
-              attempts = attempts + 1
+              attempts = attempts + 1,
+              lease_token = lease_token + 1
           FROM picked
           WHERE jobs.id = picked.id
-          RETURNING jobs.id
+          RETURNING jobs.id, jobs.lease_token
         )
-        INSERT INTO claim_log (job_id, worker_id)
-        SELECT id, $1 FROM claimed
-        RETURNING job_id AS id;`,
+        INSERT INTO claim_log (job_id, worker_id, lease_token)
+        SELECT id, $1, lease_token FROM claimed
+        RETURNING job_id AS id, lease_token;`,
         [workerId, leaseSeconds]
       );
 
@@ -73,14 +74,17 @@ async function run() {
       const job = claimResult.rows[0];
       console.log(`Claimed job ${job.id}`);
 
+      let lostLease = false;
       const heartbeatInterval = setInterval(async () => {
         try {
           const res = await pool.query(
-            "UPDATE jobs SET lease_expires_at = clock_timestamp() + make_interval(secs => $2) WHERE id = $1 AND status = 'running'",
-            [job.id, leaseSeconds]
+            "UPDATE jobs SET lease_expires_at = clock_timestamp() + make_interval(secs => $2) WHERE id = $1 AND status = 'running' AND lease_token = $3",
+            [job.id, leaseSeconds, job.lease_token]
           );
           if (res.rowCount === 0) {
-            console.log(`Heartbeat updated 0 rows for job ${job.id}`);
+            lostLease = true;
+            console.log(`Heartbeat lost lease for job ${job.id}`);
+            clearInterval(heartbeatInterval);
           }
         } catch (err) {
           console.error(err);
@@ -90,27 +94,53 @@ async function run() {
       try {
         const workDuration = Math.floor(Math.random() * (workMaxMs - workMinMs + 1)) + workMinMs;
         await sleep(workDuration);
+        clearInterval(heartbeatInterval);
 
-        const word = words[Math.floor(Math.random() * words.length)];
-        const line = `jobId=${job.id} worker=${workerId} word=${word} ts=${new Date().toISOString()}\n`;
+        if (lostLease) {
+          console.log(`Worker noted lost lease flag for job ${job.id}`);
+        }
 
-        await new Promise((resolve, reject) => {
-          fs.appendFile(jobFile, line, (err) => {
-            if (err) return reject(err);
-            resolve();
+        let committed = false;
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          const updateResult = await client.query(
+            "UPDATE jobs SET status = 'succeeded', lease_expires_at = NULL WHERE id = $1 AND lease_token = $2 AND status = 'running'",
+            [job.id, job.lease_token]
+          );
+
+          if (updateResult.rowCount === 0) {
+            await client.query('ROLLBACK');
+            console.log(`stale write rejected for job ${job.id}`);
+          } else {
+            await client.query(
+              'INSERT INTO effects (job_id, worker_id, lease_token) VALUES ($1, $2, $3)',
+              [job.id, workerId, job.lease_token]
+            );
+            await client.query('COMMIT');
+            committed = true;
+            console.log(`Finished job ${job.id}`);
+          }
+        } catch (err) {
+          try {
+            await client.query('ROLLBACK');
+          } catch {}
+          console.error(err);
+        } finally {
+          client.release();
+        }
+
+        if (committed) {
+          const word = words[Math.floor(Math.random() * words.length)];
+          const line = `jobId=${job.id} worker=${workerId} word=${word} ts=${new Date().toISOString()}\n`;
+
+          await new Promise((resolve, reject) => {
+            fs.appendFile(jobFile, line, (err) => {
+              if (err) return reject(err);
+              resolve();
+            });
           });
-        });
-
-        await pool.query(
-          'INSERT INTO effects (job_id, worker_id) VALUES ($1, $2)',
-          [job.id, workerId]
-        );
-
-        await pool.query(
-          "UPDATE jobs SET status = 'succeeded' WHERE id = $1",
-          [job.id]
-        );
-        console.log(`Finished job ${job.id}`);
+        }
       } finally {
         clearInterval(heartbeatInterval);
       }

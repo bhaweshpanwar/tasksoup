@@ -8,7 +8,7 @@ const expectedCount = process.env.EXPECTED_JOBS
     ? parseInt(process.argv[2], 10)
     : (process.env.EXPECTED_COUNT ? parseInt(process.env.EXPECTED_COUNT, 10) : 1000));
 
-const reportLabel = process.env.REPORT_LABEL || 'v2';
+const reportLabel = process.env.REPORT_LABEL || 'v3';
 const jobFilePath = process.env.JOB_FILE || path.join(__dirname, '../data/jobs.log');
 
 async function run() {
@@ -142,17 +142,17 @@ async function run() {
   }
 
   const dupClaimsRes = await pool.query(
-    'SELECT job_id, COUNT(*) AS count FROM claim_log GROUP BY job_id HAVING COUNT(*) > 1 ORDER BY count DESC, job_id ASC LIMIT 10'
+    'SELECT job_id, lease_token, COUNT(*) AS count FROM claim_log GROUP BY job_id, lease_token HAVING COUNT(*) > 1 ORDER BY count DESC, job_id ASC LIMIT 10'
   );
   if (dupClaimsRes.rows.length === 0) {
-    console.log('[PASS] Jobs with more than one row in claim_log: none');
+    console.log('[PASS] Jobs with more than one claim_log row for same lease_token: none');
   } else {
     hasFailure = true;
     console.log(
-      `[FAIL] Jobs with more than one row in claim_log (${dupClaimsRes.rows.length} offenders shown):`
+      `[FAIL] Jobs with more than one claim_log row for same lease_token (${dupClaimsRes.rows.length} offenders shown):`
     );
     for (const row of dupClaimsRes.rows) {
-      console.log(`  jobId=${row.job_id} count=${row.count}`);
+      console.log(`  jobId=${row.job_id} lease_token=${row.lease_token} count=${row.count}`);
     }
   }
 
@@ -186,6 +186,50 @@ async function run() {
       `[FAIL] Jobs with status 'running' and lease_expires_at in the past: ${expiredRes.rows.length}`
     );
   }
+
+  const mismatchCountRes = await pool.query(
+    "SELECT COUNT(*) AS count FROM jobs j JOIN effects e ON j.id = e.job_id WHERE j.status = 'succeeded' AND e.lease_token != j.lease_token"
+  );
+  const mismatchCount = parseInt(mismatchCountRes.rows[0].count, 10);
+  const mismatchRes = await pool.query(
+    "SELECT j.id, j.lease_token AS job_token, e.lease_token AS effect_token FROM jobs j JOIN effects e ON j.id = e.job_id WHERE j.status = 'succeeded' AND e.lease_token != j.lease_token LIMIT 10"
+  );
+  if (mismatchCount === 0) {
+    console.log('[PASS] Succeeded jobs with effects lease_token mismatch: 0');
+  } else {
+    hasFailure = true;
+    console.log(
+      `[FAIL] Succeeded jobs with effects lease_token mismatch (${mismatchCount} found):`
+    );
+    for (const row of mismatchRes.rows) {
+      console.log(
+        `  jobId=${row.id} job_token=${row.job_token} effect_token=${row.effect_token}`
+      );
+    }
+  }
+
+  const diffCountRes = await pool.query(
+    'SELECT COUNT(*) AS count FROM (SELECT j.id FROM jobs j LEFT JOIN claim_log c ON j.id = c.job_id GROUP BY j.id, j.attempts HAVING j.attempts != COUNT(c.id)) sub'
+  );
+  const diffCount = parseInt(diffCountRes.rows[0].count, 10);
+  const diffRes = await pool.query(
+    'SELECT j.id, j.attempts, COUNT(c.id) AS claim_count FROM jobs j LEFT JOIN claim_log c ON j.id = c.job_id GROUP BY j.id, j.attempts HAVING j.attempts != COUNT(c.id) LIMIT 10'
+  );
+  if (diffCount === 0) {
+    console.log('[PASS] Jobs where claim_log count differs from attempts: 0');
+  } else {
+    hasFailure = true;
+    console.log(
+      `[FAIL] Jobs where claim_log count differs from attempts (${diffCount} found):`
+    );
+    for (const row of diffRes.rows) {
+      console.log(
+        `  jobId=${row.id} attempts=${row.attempts} claim_count=${row.claim_count}`
+      );
+    }
+  }
+
+  console.log('Reminder: docker compose logs worker | grep "stale write rejected"');
 
   await pool.end();
 

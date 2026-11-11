@@ -5,13 +5,15 @@ CREATE TABLE IF NOT EXISTS jobs (
   worker_id TEXT,
   lease_expires_at TIMESTAMPTZ,
   attempts INT NOT NULL DEFAULT 0,
+  lease_token BIGINT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS effects (
   id BIGSERIAL PRIMARY KEY,
-  job_id BIGINT NOT NULL,
+  job_id BIGINT NOT NULL UNIQUE,
   worker_id TEXT NOT NULL,
+  lease_token BIGINT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -22,5 +24,6 @@ CREATE TABLE IF NOT EXISTS claim_log (
   id BIGSERIAL PRIMARY KEY,
   job_id BIGINT NOT NULL,
   worker_id TEXT NOT NULL,
+  lease_token BIGINT NOT NULL,
   claimed_at TIMESTAMPTZ NOT NULL DEFAULT CLOCK_TIMESTAMP()
 );
