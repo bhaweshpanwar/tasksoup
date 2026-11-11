@@ -14,3 +14,10 @@ CREATE TABLE IF NOT EXISTS effects (
 );
 
 CREATE INDEX IF NOT EXISTS idx_jobs_status_id ON jobs (status, id);
+
+CREATE TABLE IF NOT EXISTS claim_log (
+  id BIGSERIAL PRIMARY KEY,
+  job_id BIGINT NOT NULL,
+  worker_id TEXT NOT NULL,
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT CLOCK_TIMESTAMP()
+);

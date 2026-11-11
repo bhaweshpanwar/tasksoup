@@ -24,21 +24,31 @@ async function run() {
 
   while (true) {
     try {
-      const selectResult = await pool.query(
-        "SELECT id FROM jobs WHERE status = 'queued' ORDER BY id LIMIT 1"
+      const claimResult = await pool.query(
+        `WITH picked AS (
+          SELECT id FROM jobs
+          WHERE status = 'queued'
+          ORDER BY id
+          LIMIT 1
+          FOR UPDATE SKIP LOCKED
+        ),
+        claimed AS (
+          UPDATE jobs SET status = 'running', worker_id = $1
+          FROM picked WHERE jobs.id = picked.id
+          RETURNING jobs.id
+        )
+        INSERT INTO claim_log (job_id, worker_id)
+        SELECT id, $1 FROM claimed
+        RETURNING job_id AS id;`,
+        [workerId]
       );
 
-      if (selectResult.rows.length === 0) {
+      if (claimResult.rows.length === 0) {
         await sleep(200);
         continue;
       }
 
-      const job = selectResult.rows[0];
-
-      await pool.query(
-        'UPDATE jobs SET status = $1, worker_id = $2 WHERE id = $3',
-        ['running', workerId, job.id]
-      );
+      const job = claimResult.rows[0];
       console.log(`Claimed job ${job.id}`);
 
       const workDuration = Math.floor(Math.random() * (300 - 50 + 1)) + 50;

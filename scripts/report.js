@@ -2,13 +2,21 @@ const fs = require('fs');
 const path = require('path');
 const pool = require('../src/db');
 
-const expectedCount = process.argv[2]
-  ? parseInt(process.argv[2], 10)
-  : (process.env.EXPECTED_COUNT ? parseInt(process.env.EXPECTED_COUNT, 10) : 1000);
+const expectedCount = process.env.EXPECTED_JOBS
+  ? parseInt(process.env.EXPECTED_JOBS, 10)
+  : (process.argv[2]
+    ? parseInt(process.argv[2], 10)
+    : (process.env.EXPECTED_COUNT ? parseInt(process.env.EXPECTED_COUNT, 10) : 1000));
 
+const reportLabel = process.env.REPORT_LABEL || 'v1';
 const jobFilePath = process.env.JOB_FILE || path.join(__dirname, '../data/jobs.log');
 
 async function run() {
+  console.log(`REPORT_LABEL: ${reportLabel}`);
+  console.log(`TIMESTAMP: ${new Date().toISOString()}`);
+  console.log(`EXPECTED_JOBS: ${expectedCount}`);
+  console.log('---');
+
   let hasFailure = false;
 
   let fileLines = [];
@@ -131,6 +139,21 @@ async function run() {
     console.log(
       `[FAIL] Effects rows (${totalEffects}) do not match jobs.log line count (${totalLogLines})`
     );
+  }
+
+  const dupClaimsRes = await pool.query(
+    'SELECT job_id, COUNT(*) AS count FROM claim_log GROUP BY job_id HAVING COUNT(*) > 1 ORDER BY count DESC, job_id ASC LIMIT 10'
+  );
+  if (dupClaimsRes.rows.length === 0) {
+    console.log('[PASS] Jobs with more than one row in claim_log: none');
+  } else {
+    hasFailure = true;
+    console.log(
+      `[FAIL] Jobs with more than one row in claim_log (${dupClaimsRes.rows.length} offenders shown):`
+    );
+    for (const row of dupClaimsRes.rows) {
+      console.log(`  jobId=${row.job_id} count=${row.count}`);
+    }
   }
 
   await pool.end();

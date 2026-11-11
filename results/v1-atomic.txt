@@ -1,0 +1,12 @@
+REPORT_LABEL: v1-atomic
+TIMESTAMP: 2026-11-11T08:44:22.286Z
+EXPECTED_JOBS: 2000
+---
+[PASS] Total jobs in table matches expected count: 2000/2000
+[PASS] Jobs by status (counts: succeeded=2000, queued=0, running=0)
+[PASS] Jobs with more than one row in effects: none
+[PASS] Jobs with more than one line in jobs.log: none
+[PASS] Jobs stuck in running: 0
+[PASS] Jobs succeeded with zero effects: 0
+[PASS] Effects rows (2000) match jobs.log line count (2000)
+[PASS] Jobs with more than one row in claim_log: none
