@@ -42,6 +42,9 @@ services:
       DB_PASSWORD: postgres
       DB_NAME: jobs_db
       JOB_FILE: /data/jobs.log
+      LEASE_SECONDS: ${LEASE_SECONDS:-5}
+      WORK_MIN_MS: ${WORK_MIN_MS:-50}
+      WORK_MAX_MS: ${WORK_MAX_MS:-300}
     volumes:
       - ./data:/data
     depends_on:

@@ -1,0 +1,18 @@
+REPORT_LABEL: v2-freeze
+TIMESTAMP: 2026-11-11T09:07:24.802Z
+EXPECTED_JOBS: 300
+---
+[PASS] Total jobs in table matches expected count: 300/300
+[PASS] Jobs by status (counts: succeeded=300, queued=0, running=0)
+[FAIL] Jobs with more than one row in effects (1 offenders shown):
+  jobId=52 count=2
+[FAIL] Jobs with more than one line in jobs.log (1 offenders found, top 1 shown):
+  jobId=52 count=2
+[PASS] Jobs stuck in running: 0
+[PASS] Jobs succeeded with zero effects: 0
+[PASS] Effects rows (301) match jobs.log line count (301)
+[FAIL] Jobs with more than one row in claim_log (1 offenders shown):
+  jobId=52 count=2
+[INFO] Jobs with attempts > 1 (1 total, up to 10 examples shown):
+  jobId=52 attempts=2
+[PASS] Jobs with status 'running' and lease_expires_at in the past: 0

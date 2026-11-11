@@ -8,7 +8,7 @@ const expectedCount = process.env.EXPECTED_JOBS
     ? parseInt(process.argv[2], 10)
     : (process.env.EXPECTED_COUNT ? parseInt(process.env.EXPECTED_COUNT, 10) : 1000));
 
-const reportLabel = process.env.REPORT_LABEL || 'v1';
+const reportLabel = process.env.REPORT_LABEL || 'v2';
 const jobFilePath = process.env.JOB_FILE || path.join(__dirname, '../data/jobs.log');
 
 async function run() {
@@ -154,6 +154,37 @@ async function run() {
     for (const row of dupClaimsRes.rows) {
       console.log(`  jobId=${row.job_id} count=${row.count}`);
     }
+  }
+
+  const attemptsCountRes = await pool.query(
+    'SELECT COUNT(*) AS count FROM jobs WHERE attempts > 1'
+  );
+  const attemptsCount = parseInt(attemptsCountRes.rows[0].count, 10);
+  const attemptsRes = await pool.query(
+    'SELECT id, attempts FROM jobs WHERE attempts > 1 ORDER BY attempts DESC, id ASC LIMIT 10'
+  );
+
+  if (attemptsCount === 0) {
+    console.log('[PASS] Jobs with attempts > 1: 0');
+  } else {
+    console.log(
+      `[INFO] Jobs with attempts > 1 (${attemptsCount} total, up to 10 examples shown):`
+    );
+    for (const row of attemptsRes.rows) {
+      console.log(`  jobId=${row.id} attempts=${row.attempts}`);
+    }
+  }
+
+  const expiredRes = await pool.query(
+    "SELECT id, lease_expires_at FROM jobs WHERE status = 'running' AND lease_expires_at < clock_timestamp()"
+  );
+  if (expiredRes.rows.length === 0) {
+    console.log("[PASS] Jobs with status 'running' and lease_expires_at in the past: 0");
+  } else {
+    hasFailure = true;
+    console.log(
+      `[FAIL] Jobs with status 'running' and lease_expires_at in the past: ${expiredRes.rows.length}`
+    );
   }
 
   await pool.end();
