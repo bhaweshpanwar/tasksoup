@@ -1,0 +1,47 @@
+CHAOS_SEED: 1428261776
+[2026-11-11T12:04:44.133Z] Phase a: Verifying worker containers
+[2026-11-11T12:04:44.232Z] Verified 8 worker containers are running
+[2026-11-11T12:04:44.232Z] Phase b: Starting concurrent chaos activities
+[2026-11-11T12:04:44.718Z] Phase c: Producer completed. Draining queue.
+[2026-11-11T12:04:46.156Z] Killer: killing container=tasksoup_mutant_naiveclaim_3336654157-worker-6 hostname=7d23a0d5e409 held_jobs=[108]
+[2026-11-11T12:04:49.386Z] Killer: restarted container=tasksoup_mutant_naiveclaim_3336654157-worker-6
+[2026-11-11T12:04:51.231Z] Killer: killing container=tasksoup_mutant_naiveclaim_3336654157-worker-7 hostname=48ded6d935d4 held_jobs=[460]
+[2026-11-11T12:04:51.392Z] Freezer: pausing container=tasksoup_mutant_naiveclaim_3336654157-worker-5 hostname=456802ff6e47 held_jobs=[451]
+[2026-11-11T12:04:54.413Z] Killer: restarted container=tasksoup_mutant_naiveclaim_3336654157-worker-7
+[2026-11-11T12:04:56.978Z] Killer: killing container=tasksoup_mutant_naiveclaim_3336654157-worker-3 hostname=ba6741b65d0b held_jobs=[770]
+[2026-11-11T12:04:58.467Z] Freezer: unpaused container=tasksoup_mutant_naiveclaim_3336654157-worker-5
+[2026-11-11T12:05:00.170Z] Killer: restarted container=tasksoup_mutant_naiveclaim_3336654157-worker-3
+[2026-11-11T12:05:02.001Z] Killer: killing container=tasksoup_mutant_naiveclaim_3336654157-worker-6 hostname=7d23a0d5e409 held_jobs=[1108]
+[2026-11-11T12:05:05.181Z] Killer: restarted container=tasksoup_mutant_naiveclaim_3336654157-worker-6
+[2026-11-11T12:05:05.570Z] Freezer: pausing container=tasksoup_mutant_naiveclaim_3336654157-worker-1 hostname=539f03e11c32 held_jobs=[1336]
+[2026-11-11T12:05:07.859Z] Killer: killing container=tasksoup_mutant_naiveclaim_3336654157-worker-5 hostname=456802ff6e47 held_jobs=[1473]
+[2026-11-11T12:05:11.065Z] Killer: restarted container=tasksoup_mutant_naiveclaim_3336654157-worker-5
+[2026-11-11T12:05:12.654Z] Freezer: unpaused container=tasksoup_mutant_naiveclaim_3336654157-worker-1
+[2026-11-11T12:05:12.805Z] Killer: killing container=tasksoup_mutant_naiveclaim_3336654157-worker-7 hostname=48ded6d935d4 held_jobs=[]
+[2026-11-11T12:05:16.037Z] Killer: restarted container=tasksoup_mutant_naiveclaim_3336654157-worker-7
+[2026-11-11T12:05:19.655Z] Phase c: Stopping chaos, restoring all workers.
+[2026-11-11T12:05:20.057Z] Phase d: Running invariant checks
+[PASS] Invariant 1: No job lost
+[PASS] Invariant 2: Idempotency
+[PASS] Invariant 3: No job has more than one effects row
+[FAIL] Invariant 4: No job has more than one jobs.log line (jobId=52 count=2, jobId=53 count=2, jobId=85 count=2, jobId=98 count=2, jobId=91 count=2, jobId=90 count=2, jobId=108 count=2, jobId=102 count=2, jobId=109 count=2, jobId=112 count=2)
+[PASS] Invariant 5: Every job is in a terminal state
+[PASS] Invariant 6: Status vs effects consistency
+[PASS] Invariant 7: Cancel consistency
+[PASS] Invariant 8: Claim log consistency
+[PASS] Invariant 9: Terminal jobs have lease_expires_at NULL
+[KNOWN-FLAW] Succeeded jobs with effects row but no jobs.log line: count=0 (ids: )
+--- EVENT COVERAGE ---
+Kills: total=6, landed_on_running=5, held_no_job=1
+Attempts > 1: count=69, max_attempts=3
+Failed jobs count: 0
+Cancels: 200=50, 409=0, 404=0, cancelled_after_claim=26
+Cancel attempts targeting a running job: 26
+Cancel attempts targeting a running job returned 200: 26
+Cancel attempts that returned 200: 50
+Cancelled-after-claim with stale write rejection: 26
+Total "stale write rejected" lines in worker logs: 93
+Producer: 201=1000, 200_replays=666, 422=0, network_errors=0
+Freezes: total=2, held_job=2
+Duration: 36.01s, Throughput: 27.77 jobs/s
+CHAOS_SEED: 1428261776

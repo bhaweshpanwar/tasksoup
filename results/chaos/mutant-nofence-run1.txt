@@ -1,0 +1,43 @@
+CHAOS_SEED: 2381670659
+[2026-11-11T12:05:38.563Z] Phase a: Verifying worker containers
+[2026-11-11T12:05:38.646Z] Verified 8 worker containers are running
+[2026-11-11T12:05:38.646Z] Phase b: Starting concurrent chaos activities
+[2026-11-11T12:05:39.122Z] Phase c: Producer completed. Draining queue.
+[2026-11-11T12:05:41.685Z] Killer: killing container=tasksoup_mutant_nofence_769020523-worker-8 hostname=77be5666115a held_jobs=[207]
+[2026-11-11T12:05:44.893Z] Killer: restarted container=tasksoup_mutant_nofence_769020523-worker-8
+[2026-11-11T12:05:45.774Z] Freezer: pausing container=tasksoup_mutant_nofence_769020523-worker-4 hostname=be7eb323f710 held_jobs=[492]
+[2026-11-11T12:05:46.363Z] Killer: killing container=tasksoup_mutant_nofence_769020523-worker-4 hostname=be7eb323f710 held_jobs=[492]
+[2026-11-11T12:05:49.579Z] Killer: restarted container=tasksoup_mutant_nofence_769020523-worker-4
+[2026-11-11T12:05:52.211Z] Killer: killing container=tasksoup_mutant_nofence_769020523-worker-1 hostname=cdffe43fa868 held_jobs=[943]
+[2026-11-11T12:05:55.419Z] Killer: restarted container=tasksoup_mutant_nofence_769020523-worker-1
+[2026-11-11T12:05:57.746Z] Killer: killing container=tasksoup_mutant_nofence_769020523-worker-1 hostname=cdffe43fa868 held_jobs=[1281]
+[2026-11-11T12:05:59.960Z] Freezer: pausing container=tasksoup_mutant_nofence_769020523-worker-3 hostname=25f7b6180f66 held_jobs=[1417]
+[2026-11-11T12:06:00.963Z] Killer: restarted container=tasksoup_mutant_nofence_769020523-worker-1
+[2026-11-11T12:06:02.346Z] Killer: killing container=tasksoup_mutant_nofence_769020523-worker-3 hostname=25f7b6180f66 held_jobs=[1417]
+[2026-11-11T12:06:05.576Z] Killer: restarted container=tasksoup_mutant_nofence_769020523-worker-3
+[2026-11-11T12:06:08.203Z] Phase c: Stopping chaos, restoring all workers.
+[2026-11-11T12:06:08.582Z] Phase d: Running invariant checks
+[PASS] Invariant 1: No job lost
+[PASS] Invariant 2: Idempotency
+[PASS] Invariant 3: No job has more than one effects row
+[FAIL] Invariant 4: No job has more than one jobs.log line (jobId=53 count=2, jobId=56 count=2, jobId=71 count=2, jobId=76 count=2, jobId=86 count=2, jobId=92 count=2, jobId=91 count=2, jobId=128 count=2, jobId=146 count=2, jobId=145 count=2)
+[PASS] Invariant 5: Every job is in a terminal state
+[PASS] Invariant 6: Status vs effects consistency
+[PASS] Invariant 7: Cancel consistency
+[PASS] Invariant 8: Claim log consistency
+[PASS] Invariant 9: Terminal jobs have lease_expires_at NULL
+[KNOWN-FLAW] Succeeded jobs with effects row but no jobs.log line: count=0 (ids: )
+--- EVENT COVERAGE ---
+Kills: total=5, landed_on_running=5, held_no_job=0
+Attempts > 1: count=5, max_attempts=2
+Failed jobs count: 0
+Cancels: 200=49, 409=1, 404=0, cancelled_after_claim=30
+Cancel attempts targeting a running job: 30
+Cancel attempts targeting a running job returned 200: 29
+Cancel attempts that returned 200: 49
+Cancelled-after-claim with stale write rejection: 30
+Total "stale write rejected" lines in worker logs: 30
+Producer: 201=1000, 200_replays=597, 422=0, network_errors=0
+Freezes: total=2, held_job=2
+Duration: 30.10s, Throughput: 33.22 jobs/s
+CHAOS_SEED: 2381670659

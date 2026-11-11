@@ -1,0 +1,42 @@
+CHAOS_SEED: 1726144263
+[2026-11-11T12:06:34.390Z] Phase a: Verifying worker containers
+[2026-11-11T12:06:34.475Z] Verified 8 worker containers are running
+[2026-11-11T12:06:34.475Z] Phase b: Starting concurrent chaos activities
+[2026-11-11T12:06:34.928Z] Phase c: Producer completed. Draining queue.
+[2026-11-11T12:06:36.766Z] Killer: killing container=tasksoup-worker-8 hostname=307647eef49a held_jobs=[161]
+[2026-11-11T12:06:39.963Z] Killer: restarted container=tasksoup-worker-8
+[2026-11-11T12:06:42.047Z] Killer: killing container=tasksoup-worker-4 hostname=6b95759d9965 held_jobs=[522]
+[2026-11-11T12:06:45.251Z] Killer: restarted container=tasksoup-worker-4
+[2026-11-11T12:06:46.472Z] Killer: killing container=tasksoup-worker-3 hostname=d57ce535048e held_jobs=[777]
+[2026-11-11T12:06:49.675Z] Killer: restarted container=tasksoup-worker-3
+[2026-11-11T12:06:51.585Z] Killer: killing container=tasksoup-worker-2 hostname=9da95f4b28ba held_jobs=[1138]
+[2026-11-11T12:06:54.796Z] Killer: restarted container=tasksoup-worker-2
+[2026-11-11T12:06:57.454Z] Killer: killing container=tasksoup-worker-5 hostname=7c6952196817 held_jobs=[1516]
+[2026-11-11T12:07:00.670Z] Killer: restarted container=tasksoup-worker-5
+[2026-11-11T12:07:02.435Z] Killer: killing container=tasksoup-worker-1 hostname=c7e66772cb70 held_jobs=[]
+[2026-11-11T12:07:05.640Z] Killer: restarted container=tasksoup-worker-1
+[2026-11-11T12:07:05.640Z] Phase c: Stopping chaos, restoring all workers.
+[2026-11-11T12:07:05.971Z] Phase d: Running invariant checks
+[PASS] Invariant 1: No job lost
+[PASS] Invariant 2: Idempotency
+[PASS] Invariant 3: No job has more than one effects row
+[PASS] Invariant 4: No job has more than one jobs.log line
+[PASS] Invariant 5: Every job is in a terminal state
+[PASS] Invariant 6: Status vs effects consistency
+[PASS] Invariant 7: Cancel consistency
+[PASS] Invariant 8: Claim log consistency
+[PASS] Invariant 9: Terminal jobs have lease_expires_at NULL
+[KNOWN-FLAW] Succeeded jobs with effects row but no jobs.log line: count=0 (ids: )
+--- EVENT COVERAGE ---
+Kills: total=6, landed_on_running=5, held_no_job=1
+Attempts > 1: count=5, max_attempts=2
+Failed jobs count: 0
+Cancels: 200=49, 409=1, 404=0, cancelled_after_claim=18
+Cancel attempts targeting a running job: 18
+Cancel attempts targeting a running job returned 200: 17
+Cancel attempts that returned 200: 49
+Cancelled-after-claim with stale write rejection: 18
+Total "stale write rejected" lines in worker logs: 18
+Producer: 201=1000, 200_replays=600, 422=0, network_errors=0
+Duration: 31.66s, Throughput: 31.59 jobs/s
+CHAOS_SEED: 1726144263

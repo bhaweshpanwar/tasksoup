@@ -1,0 +1,38 @@
+CHAOS_SEED: 1710848041
+[2026-11-11T12:07:17.336Z] Phase a: Verifying worker containers
+[2026-11-11T12:07:17.417Z] Verified 8 worker containers are running
+[2026-11-11T12:07:17.417Z] Phase b: Starting concurrent chaos activities
+[2026-11-11T12:07:17.855Z] Phase c: Producer completed. Draining queue.
+[2026-11-11T12:07:20.096Z] Killer: killing container=tasksoup-worker-4 hostname=44cbb4d9d1f4 held_jobs=[176]
+[2026-11-11T12:07:23.310Z] Killer: restarted container=tasksoup-worker-4
+[2026-11-11T12:07:25.422Z] Killer: killing container=tasksoup-worker-7 hostname=f9289e851c21 held_jobs=[519]
+[2026-11-11T12:07:28.649Z] Killer: restarted container=tasksoup-worker-7
+[2026-11-11T12:07:30.067Z] Killer: killing container=tasksoup-worker-5 hostname=b9d6d92fbda8 held_jobs=[837]
+[2026-11-11T12:07:33.287Z] Killer: restarted container=tasksoup-worker-5
+[2026-11-11T12:07:35.412Z] Killer: killing container=tasksoup-worker-1 hostname=742f77849528 held_jobs=[1217]
+[2026-11-11T12:07:38.621Z] Killer: restarted container=tasksoup-worker-1
+[2026-11-11T12:07:40.903Z] Phase c: Stopping chaos, restoring all workers.
+[2026-11-11T12:07:41.295Z] Phase d: Running invariant checks
+[PASS] Invariant 1: No job lost
+[PASS] Invariant 2: Idempotency
+[PASS] Invariant 3: No job has more than one effects row
+[PASS] Invariant 4: No job has more than one jobs.log line
+[PASS] Invariant 5: Every job is in a terminal state
+[PASS] Invariant 6: Status vs effects consistency
+[PASS] Invariant 7: Cancel consistency
+[PASS] Invariant 8: Claim log consistency
+[PASS] Invariant 9: Terminal jobs have lease_expires_at NULL
+[KNOWN-FLAW] Succeeded jobs with effects row but no jobs.log line: count=0 (ids: )
+--- EVENT COVERAGE ---
+Kills: total=4, landed_on_running=4, held_no_job=0
+Attempts > 1: count=4, max_attempts=2
+Failed jobs count: 0
+Cancels: 200=49, 409=1, 404=0, cancelled_after_claim=20
+Cancel attempts targeting a running job: 20
+Cancel attempts targeting a running job returned 200: 20
+Cancel attempts that returned 200: 49
+Cancelled-after-claim with stale write rejection: 20
+Total "stale write rejected" lines in worker logs: 20
+Producer: 201=1000, 200_replays=598, 422=0, network_errors=0
+Duration: 24.06s, Throughput: 41.57 jobs/s
+CHAOS_SEED: 1710848041

@@ -1,0 +1,50 @@
+--- a/src/worker.js	2026-11-11 15:39:16
++++ b/src/worker.js	2026-11-11 16:59:46
+@@ -52,29 +52,25 @@
+ 
+   while (true) {
+     try {
++      const selectResult = await pool.query(
++        "SELECT id, lease_token FROM jobs WHERE status = 'queued' ORDER BY id LIMIT 1"
++      );
++      if (selectResult.rows.length === 0) {
++        await sleep(200);
++        continue;
++      }
++      const candidate = selectResult.rows[0];
++      const updateResult = await pool.query(
++        "UPDATE jobs SET status = 'running', worker_id = $1, lease_expires_at = clock_timestamp() + make_interval(secs => $2), attempts = attempts + 1, lease_token = lease_token + 1 WHERE id = $3 RETURNING id, lease_token",
++        [workerId, leaseSeconds, candidate.id]
++      );
++      if (updateResult.rows.length === 0) {
++        await sleep(200);
++        continue;
++      }
+       const claimResult = await pool.query(
+-        `WITH picked AS (
+-          SELECT id FROM jobs
+-          WHERE status = 'queued'
+-          ORDER BY id
+-          LIMIT 1
+-          FOR UPDATE SKIP LOCKED
+-        ),
+-        claimed AS (
+-          UPDATE jobs
+-          SET status = 'running',
+-              worker_id = $1,
+-              lease_expires_at = clock_timestamp() + make_interval(secs => $2),
+-              attempts = attempts + 1,
+-              lease_token = lease_token + 1
+-          FROM picked
+-          WHERE jobs.id = picked.id
+-          RETURNING jobs.id, jobs.lease_token
+-        )
+-        INSERT INTO claim_log (job_id, worker_id, lease_token)
+-        SELECT id, $1, lease_token FROM claimed
+-        RETURNING job_id AS id, lease_token;`,
+-        [workerId, leaseSeconds]
++        "INSERT INTO claim_log (job_id, worker_id, lease_token) VALUES ($1, $2, $3) RETURNING job_id AS id, lease_token",
++        [updateResult.rows[0].id, workerId, updateResult.rows[0].lease_token]
+       );
+ 
+       if (claimResult.rows.length === 0) {

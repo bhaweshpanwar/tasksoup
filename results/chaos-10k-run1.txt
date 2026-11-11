@@ -1,0 +1,100 @@
+CHAOS_SEED: 748246966
+[2026-11-11T13:32:54.589Z] Phase a: Verifying worker containers
+[2026-11-11T13:32:54.691Z] Verified 8 worker containers are running
+[2026-11-11T13:32:54.691Z] Phase b: Starting concurrent chaos activities
+[2026-11-11T13:32:56.896Z] Killer: killing container=tasksoup-worker-3 hostname=d14960deb521 held_jobs=[143]
+[2026-11-11T13:32:57.316Z] Phase c: Producer completed. Draining queue.
+[2026-11-11T13:33:00.113Z] Killer: restarted container=tasksoup-worker-3
+[2026-11-11T13:33:01.766Z] Killer: killing container=tasksoup-worker-6 hostname=08a521cb902e held_jobs=[487]
+[2026-11-11T13:33:04.978Z] Killer: restarted container=tasksoup-worker-6
+[2026-11-11T13:33:07.219Z] Killer: killing container=tasksoup-worker-7 hostname=6dd2f6967acc held_jobs=[837]
+[2026-11-11T13:33:10.435Z] Killer: restarted container=tasksoup-worker-7
+[2026-11-11T13:33:12.141Z] Killer: killing container=tasksoup-worker-4 hostname=6efb6d20b957 held_jobs=[1153]
+[2026-11-11T13:33:15.360Z] Killer: restarted container=tasksoup-worker-4
+[2026-11-11T13:33:17.475Z] Killer: killing container=tasksoup-worker-3 hostname=d14960deb521 held_jobs=[1561]
+[2026-11-11T13:33:20.682Z] Killer: restarted container=tasksoup-worker-3
+[2026-11-11T13:33:21.867Z] Killer: killing container=tasksoup-worker-1 hostname=b17aa2775c2e held_jobs=[1860]
+[2026-11-11T13:33:25.065Z] Killer: restarted container=tasksoup-worker-1
+[2026-11-11T13:33:27.175Z] Killer: killing container=tasksoup-worker-2 hostname=d34d9c1e2179 held_jobs=[2247]
+[2026-11-11T13:33:30.383Z] Killer: restarted container=tasksoup-worker-2
+[2026-11-11T13:33:31.904Z] Killer: killing container=tasksoup-worker-1 hostname=b17aa2775c2e held_jobs=[2543]
+[2026-11-11T13:33:35.109Z] Killer: restarted container=tasksoup-worker-1
+[2026-11-11T13:33:37.735Z] Killer: killing container=tasksoup-worker-3 hostname=d14960deb521 held_jobs=[2924]
+[2026-11-11T13:33:40.941Z] Killer: restarted container=tasksoup-worker-3
+[2026-11-11T13:33:43.395Z] Killer: killing container=tasksoup-worker-4 hostname=6efb6d20b957 held_jobs=[3301]
+[2026-11-11T13:33:46.611Z] Killer: restarted container=tasksoup-worker-4
+[2026-11-11T13:33:48.667Z] Killer: killing container=tasksoup-worker-7 hostname=6dd2f6967acc held_jobs=[3626]
+[2026-11-11T13:33:51.875Z] Killer: restarted container=tasksoup-worker-7
+[2026-11-11T13:33:54.403Z] Killer: killing container=tasksoup-worker-1 hostname=b17aa2775c2e held_jobs=[4019]
+[2026-11-11T13:33:57.624Z] Killer: restarted container=tasksoup-worker-1
+[2026-11-11T13:33:59.495Z] Killer: killing container=tasksoup-worker-8 hostname=8944306fd580 held_jobs=[4019]
+[2026-11-11T13:34:02.717Z] Killer: restarted container=tasksoup-worker-8
+[2026-11-11T13:34:05.419Z] Killer: killing container=tasksoup-worker-3 hostname=d14960deb521 held_jobs=[4775]
+[2026-11-11T13:34:08.627Z] Killer: restarted container=tasksoup-worker-3
+[2026-11-11T13:34:11.122Z] Killer: killing container=tasksoup-worker-5 hostname=9784c601ba0a held_jobs=[5155]
+[2026-11-11T13:34:14.337Z] Killer: restarted container=tasksoup-worker-5
+[2026-11-11T13:34:15.709Z] Killer: killing container=tasksoup-worker-1 hostname=b17aa2775c2e held_jobs=[5487]
+[2026-11-11T13:34:18.920Z] Killer: restarted container=tasksoup-worker-1
+[2026-11-11T13:34:21.120Z] Killer: killing container=tasksoup-worker-6 hostname=08a521cb902e held_jobs=[5815]
+[2026-11-11T13:34:24.314Z] Killer: restarted container=tasksoup-worker-6
+[2026-11-11T13:34:26.342Z] Killer: killing container=tasksoup-worker-3 hostname=d14960deb521 held_jobs=[6163]
+[2026-11-11T13:34:29.505Z] Killer: restarted container=tasksoup-worker-3
+[2026-11-11T13:34:31.423Z] Killer: killing container=tasksoup-worker-6 hostname=08a521cb902e held_jobs=[6496]
+[2026-11-11T13:34:34.605Z] Killer: restarted container=tasksoup-worker-6
+[2026-11-11T13:34:36.155Z] Killer: killing container=tasksoup-worker-4 hostname=6efb6d20b957 held_jobs=[6806]
+[2026-11-11T13:34:39.353Z] Killer: restarted container=tasksoup-worker-4
+[2026-11-11T13:34:41.088Z] Killer: killing container=tasksoup-worker-2 hostname=d34d9c1e2179 held_jobs=[7125]
+[2026-11-11T13:34:44.293Z] Killer: restarted container=tasksoup-worker-2
+[2026-11-11T13:34:45.390Z] Killer: killing container=tasksoup-worker-8 hostname=8944306fd580 held_jobs=[7364]
+[2026-11-11T13:34:48.593Z] Killer: restarted container=tasksoup-worker-8
+[2026-11-11T13:34:51.121Z] Killer: killing container=tasksoup-worker-8 hostname=8944306fd580 held_jobs=[7751]
+[2026-11-11T13:34:54.338Z] Killer: restarted container=tasksoup-worker-8
+[2026-11-11T13:34:57.323Z] Killer: killing container=tasksoup-worker-8 hostname=8944306fd580 held_jobs=[8202]
+[2026-11-11T13:35:00.532Z] Killer: restarted container=tasksoup-worker-8
+[2026-11-11T13:35:03.288Z] Killer: killing container=tasksoup-worker-8 hostname=8944306fd580 held_jobs=[8628]
+[2026-11-11T13:35:06.493Z] Killer: restarted container=tasksoup-worker-8
+[2026-11-11T13:35:07.675Z] Killer: killing container=tasksoup-worker-7 hostname=6dd2f6967acc held_jobs=[8918]
+[2026-11-11T13:35:10.905Z] Killer: restarted container=tasksoup-worker-7
+[2026-11-11T13:35:12.545Z] Killer: killing container=tasksoup-worker-2 hostname=d34d9c1e2179 held_jobs=[9261]
+[2026-11-11T13:35:15.754Z] Killer: restarted container=tasksoup-worker-2
+[2026-11-11T13:35:17.632Z] Killer: killing container=tasksoup-worker-1 hostname=b17aa2775c2e held_jobs=[9622]
+[2026-11-11T13:35:20.848Z] Killer: restarted container=tasksoup-worker-1
+[2026-11-11T13:35:23.306Z] Killer: killing container=tasksoup-worker-7 hostname=6dd2f6967acc held_jobs=[9971]
+[2026-11-11T13:35:26.524Z] Killer: restarted container=tasksoup-worker-7
+[2026-11-11T13:35:28.438Z] Killer: killing container=tasksoup-worker-4 hostname=6efb6d20b957 held_jobs=[10326]
+[2026-11-11T13:35:31.638Z] Killer: restarted container=tasksoup-worker-4
+[2026-11-11T13:35:33.944Z] Killer: killing container=tasksoup-worker-6 hostname=08a521cb902e held_jobs=[10701]
+[2026-11-11T13:35:37.155Z] Killer: restarted container=tasksoup-worker-6
+[2026-11-11T13:35:40.134Z] Killer: killing container=tasksoup-worker-8 hostname=8944306fd580 held_jobs=[11100]
+[2026-11-11T13:35:43.341Z] Killer: restarted container=tasksoup-worker-8
+[2026-11-11T13:35:44.751Z] Killer: killing container=tasksoup-worker-8 hostname=8944306fd580 held_jobs=[11115, 11435]
+[2026-11-11T13:35:47.943Z] Killer: restarted container=tasksoup-worker-8
+[2026-11-11T13:35:49.939Z] Killer: killing container=tasksoup-worker-5 hostname=9784c601ba0a held_jobs=[11801]
+[2026-11-11T13:35:53.155Z] Killer: restarted container=tasksoup-worker-5
+[2026-11-11T13:35:54.687Z] Killer: killing container=tasksoup-worker-4 hostname=6efb6d20b957 held_jobs=[12104]
+[2026-11-11T13:35:57.875Z] Killer: restarted container=tasksoup-worker-4
+[2026-11-11T13:35:57.875Z] Phase c: Stopping chaos, restoring all workers.
+[2026-11-11T13:36:28.256Z] Phase d: Running invariant checks
+[PASS] Invariant 1: No job lost
+[PASS] Invariant 2: Idempotency
+[PASS] Invariant 3: No job has more than one effects row
+[PASS] Invariant 4: No job has more than one jobs.log line
+[FAIL] Invariant 5: Every job is in a terminal state (14425:queued, 14426:queued, 14427:queued, 14428:queued, 14429:queued, 14430:queued, 14431:queued, 14432:queued, 14434:queued, 14435:queued)
+[PASS] Invariant 6: Status vs effects consistency
+[PASS] Invariant 7: Cancel consistency
+[PASS] Invariant 8: Claim log consistency
+[PASS] Invariant 9: Terminal jobs have lease_expires_at NULL
+[KNOWN-FLAW] Succeeded jobs with effects row but no jobs.log line: count=1 (ids: 14412)
+--- EVENT COVERAGE ---
+Kills: total=35, landed_on_running=35, held_no_job=0
+Attempts > 1: count=30, max_attempts=3
+Failed jobs count: 0
+Cancels: 200=495, 409=5, 404=0, cancelled_after_claim=232
+Cancel attempts targeting a running job: 234
+Cancel attempts targeting a running job returned 200: 232
+Cancel attempts that returned 200: 495
+Cancelled-after-claim with stale write rejection: 228
+Total "stale write rejected" lines in worker logs: 228
+Producer: 201=10000, 200_replays=5984, 422=0, network_errors=0
+Duration: 213.82s, Throughput: 46.77 jobs/s
+CHAOS_SEED: 748246966
